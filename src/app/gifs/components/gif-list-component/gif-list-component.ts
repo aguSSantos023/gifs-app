@@ -1,5 +1,6 @@
 import { Component, input, WritableSignal } from '@angular/core';
 import { GifListItemComponent } from "./gif-list-item-component/gif-list-item-component";
+import { Gif } from '../../interfaces/gif-interface';
 
 @Component({
   selector: 'gifs-gif-list-component',
@@ -9,6 +10,6 @@ import { GifListItemComponent } from "./gif-list-item-component/gif-list-item-co
 })
 export class GifListComponent {
 
-  listUrlImg = input.required<string[]>()
+  gifs = input.required<Gif[]>()
 
 }
