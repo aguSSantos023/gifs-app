@@ -5,6 +5,7 @@ import { GiphyResponse } from '../interfaces/giphy-interface';
 import { Gif } from '../interfaces/gif-interface';
 import { GifMapper } from '../mapper/gif-mapper';
 import { tap } from 'rxjs'
+import TrendingPage from '../pages/trending-page/trending-page';
 
 const GIF_KEY = 'gifs'
 
@@ -25,7 +26,19 @@ export class GifsService {
 
 
   trendingGifs = signal<Gif[]>([])
-  trendingGifsLoading = signal(true)
+  trendingGifsLoading = signal(false)
+  private trendingPage = signal(0)
+
+  trendingGifGroup = computed<Gif[][]>(() => {
+    const groups = [];
+
+    for (let i = 0; i < this.trendingGifs().length; i +=3) {
+      groups.push( this.trendingGifs().slice(i, i + 3))
+    }
+
+
+    return groups;
+  })
 
   searchHistory = signal<Record<string, Gif[]>>(loadFromLocalStorage())
   searchHistoryKeys = computed(() => Object.keys(this.searchHistory()))
@@ -44,16 +57,24 @@ export class GifsService {
 
   loadTrendingGifs() {
 
+    if (this.trendingGifsLoading()) return
+
+    this.trendingGifsLoading.set(true)
+
     this.http.get<GiphyResponse>(environment.giphyUrl + "/gifs/trending", {
       params: {
         api_key: environment.giphyApiKey,
-        limit: 2
+        limit: 24,
+        offset: this.trendingPage() * 24
       }
     }).subscribe(res => {
       const gifs = GifMapper.mapGiphyItemsToGifArray(res.data)
 
-      console.log(gifs);
-      this.trendingGifs.set(gifs)
+      this.trendingPage.update(currentPage => currentPage + 1)
+      this.trendingGifs.update(currentGifs => [
+        ...currentGifs,
+        ...gifs
+      ])
       this.trendingGifsLoading.set(false)
 
     })
